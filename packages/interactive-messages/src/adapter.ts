@@ -1,5 +1,5 @@
 /* tslint:disable import-name */
-import http, { RequestListener } from 'http';
+import http, { RequestListener, Agent } from 'http';
 import axios, { AxiosInstance } from 'axios';
 import isString from 'lodash.isstring';
 import isRegExp from 'lodash.isregexp';
@@ -133,10 +133,13 @@ export class SlackMessageAdapter {
    * @param options.lateResponseFallbackEnabled - whether or not promises that resolve after the syncResponseTimeout can
    *   fallback to a request for the response_url. this only works in cases where the semantic meaning of the response
    *   and the response_url are the same.
+   * @param options.agent - The agent responsible for creating and maintaining HTTP(S) connections. Can be used to proxy
+   *   outgoing requests.
    */
   constructor(signingSecret: string, {
     syncResponseTimeout = 2500,
     lateResponseFallbackEnabled = true,
+    agent = undefined,
   }: MessageAdapterOptions = {}) {
     if (!isString(signingSecret)) {
       throw new TypeError('SlackMessageAdapter needs a signing secret');
@@ -154,6 +157,8 @@ export class SlackMessageAdapter {
       headers: {
         'User-Agent': packageIdentifier(),
       },
+      httpAgent: agent,
+      httpsAgent: agent,
     });
 
     debug('instantiated');
@@ -654,6 +659,7 @@ interface DispatchResult {
 export interface MessageAdapterOptions {
   syncResponseTimeout?: number;
   lateResponseFallbackEnabled?: boolean;
+  agent?: Agent;
 }
 
 /**
